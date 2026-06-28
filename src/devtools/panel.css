@@ -1,0 +1,270 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+}
+
+body {
+  margin: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) 2fr;
+  gap: 12px;
+  padding: 12px;
+  overflow: auto;
+  flex: 1;
+}
+
+.empty {
+  padding: 12px;
+  opacity: 0.6;
+}
+
+.rule-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  counter-reset: rule;
+}
+
+.rule-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  counter-increment: rule;
+}
+
+.rule-item::before {
+  content: counter(rule);
+  min-width: 1.2em;
+  text-align: right;
+  opacity: 0.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.rule-move {
+  display: flex;
+  flex-direction: column;
+  line-height: 0.8;
+}
+
+.rule-move button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 10px;
+}
+
+.rule-move button:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.rule-item.selected {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.rule-summary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+
+.rule-op {
+  font-weight: 600;
+}
+
+.rule-badge {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.badge-modify {
+  opacity: 0.8;
+}
+
+.rule-endpoint {
+  opacity: 0.6;
+  font-size: 11px;
+  margin-left: auto;
+}
+
+.rule-delete {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.rule-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rule-editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rule-editor input[type='text'],
+.rule-editor input:not([type]),
+.rule-editor textarea {
+  font: inherit;
+  padding: 4px 6px;
+}
+
+.rule-editor textarea {
+  font-family: ui-monospace, monospace;
+  resize: vertical;
+}
+
+.action-type {
+  display: flex;
+  gap: 16px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 6px;
+}
+
+.action-type label {
+  flex-direction: row;
+  align-items: center;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.error {
+  color: #d33;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.path-patches {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.path-patches-title {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.path-patch-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.path-input,
+.value-input {
+  font: inherit;
+  font-family: ui-monospace, monospace;
+  padding: 4px 6px;
+}
+
+.path-patch-row .rule-delete {
+  font-size: 12px;
+}
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.toolbar button.capturing {
+  color: #d33;
+  font-weight: 600;
+}
+
+.capture {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  padding-top: 8px;
+}
+
+.capture-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.capture-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.capture-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.capture-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.capture-meta .rule-endpoint {
+  margin-left: auto;
+}
+
+.capture-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.capture-actions button {
+  font-size: 11px;
+}
