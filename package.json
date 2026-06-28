@@ -1,40 +1,30 @@
 {
   "name": "srikae",
   "version": "0.0.0",
-  "description": "A starter for creating a TypeScript package.",
-  "homepage": "https://github.com/author/library#readme",
-  "bugs": {
-    "url": "https://github.com/author/library/issues"
-  },
+  "private": true,
+  "description": "Chrome extension that mocks/modifies GraphQL responses per operation.",
   "license": "MIT",
-  "author": "Author Name <author.name@mail.com>",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/author/library.git"
-  },
-  "files": [
-    "dist"
-  ],
   "type": "module",
-  "exports": {
-    ".": "./dist/index.mjs",
-    "./package.json": "./package.json"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
-    "build": "vp pack",
-    "dev": "vp pack --watch",
+    "dev": "vp dev",
+    "build": "vp build",
+    "preview": "vp preview",
     "test": "vp test",
-    "check": "vp check",
-    "prepublishOnly": "vp run build",
-    "prepare": "vp config"
+    "check": "vp check"
+  },
+  "dependencies": {
+    "@mswjs/interceptors": "^0.41.9",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@crxjs/vite-plugin": "2.7.0",
+    "@types/chrome": "^0.2.0",
     "@types/node": "^25.6.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "@typescript/native-preview": "7.0.0-dev.20260509.2",
-    "bumpp": "^11.1.0",
+    "@vitejs/plugin-react": "^6.0.3",
     "typescript": "^6.0.3",
     "vite-plus": "^0.1.20"
   },

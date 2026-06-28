@@ -1,14 +1,25 @@
-import { defineConfig } from "vite-plus";
+import { fileURLToPath } from 'node:url'
+
+import { crx } from '@crxjs/vite-plugin'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite-plus'
+
+import manifest from './manifest.config.ts'
+
+const panelInput = fileURLToPath(new URL('./src/devtools/panel.html', import.meta.url))
 
 export default defineConfig({
-  staged: {
-    "*": "vp check --fix",
-  },
-  pack: {
-    dts: {
-      tsgo: true,
+  plugins: [react(), crx({ manifest })],
+  build: {
+    rollupOptions: {
+      input: { panel: panelInput },
     },
-    exports: true,
+  },
+  server: {
+    cors: { origin: [/chrome-extension:\/\//] },
+  },
+  staged: {
+    '*': 'vp check --fix',
   },
   lint: {
     options: {
@@ -16,5 +27,8 @@ export default defineConfig({
       typeCheck: true,
     },
   },
-  fmt: {},
-});
+  fmt: {
+    semi: false,
+    singleQuote: true,
+  },
+})
