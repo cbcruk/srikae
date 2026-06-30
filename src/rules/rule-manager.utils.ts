@@ -1,5 +1,5 @@
-import type { Rule } from '../../../shared/rule.types.ts'
-import { parseRules } from '../../../shared/rule.utils.ts'
+import type { Rule } from '../shared/rule.types.ts'
+import { parseRules } from '../shared/rule.utils.ts'
 
 export function exportRules(rules: Rule[]): void {
   const blob = new Blob([JSON.stringify(rules, null, 2)], {

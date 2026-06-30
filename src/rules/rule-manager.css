@@ -30,6 +30,11 @@ body {
   flex: 1;
 }
 
+.layout.stacked {
+  grid-template-columns: 1fr;
+  align-content: start;
+}
+
 .empty {
   padding: 12px;
   opacity: 0.6;

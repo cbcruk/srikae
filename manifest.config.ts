@@ -7,8 +7,11 @@ export default defineManifest({
   name: 'GraphQL Mock',
   version: pkg.version,
   description: pkg.description,
-  permissions: ['storage'],
+  permissions: ['storage', 'sidePanel'],
   host_permissions: ['<all_urls>'],
+  action: { default_title: 'GraphQL Mock' },
+  side_panel: { default_path: 'src/sidepanel/sidepanel.html' },
+  background: { service_worker: 'src/background/service-worker.ts', type: 'module' },
   devtools_page: 'src/devtools/devtools.html',
   content_scripts: [
     {

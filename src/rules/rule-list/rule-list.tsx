@@ -1,4 +1,4 @@
-import type { Rule } from '../../../shared/rule.types.ts'
+import type { Rule } from '../../shared/rule.types.ts'
 
 export interface RuleListProps {
   rules: Rule[]

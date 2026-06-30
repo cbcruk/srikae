@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import type { Rule } from '../../shared/rule.types.ts'
-import { getRules, onRulesChanged, setRules } from '../../shared/storage.ts'
+import type { Rule } from '../shared/rule.types.ts'
+import { getRules, onRulesChanged, setRules } from '../shared/storage.ts'
 
 export interface UseRulesResult {
   rules: Rule[]

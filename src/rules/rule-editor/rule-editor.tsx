@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-import { parsePath } from '../../../shared/path.ts'
-import type { PathPatch, Rule, RuleAction } from '../../../shared/rule.types.ts'
+import { parsePath } from '../../shared/path.ts'
+import type { PathPatch, Rule, RuleAction } from '../../shared/rule.types.ts'
 import { PathPatches, type PathPatchRow } from './path-patches.tsx'
 import { parseJson, stringifyJson } from './rule-editor.utils.ts'
 
