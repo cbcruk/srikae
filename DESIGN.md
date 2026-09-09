@@ -95,14 +95,28 @@ MAIN world는 페이지의 CSP를 따른다. 대부분의 앱이 `unsafe-eval`�
 interface Rule {
   id: string
   enabled: boolean
-  endpoint: string // "*/graphql" 같은 glob (v0는 substring 매칭으로 시작)
-  operationName: string // "GetAppointments"
+  endpoint: string // 패턴. 해석은 matcher가 정한다
+  matcher?: 'includes' | 'glob' | 'regex' | 'exact' // 기본 includes
+  operationName: string // "GetAppointments". 비우면 엔드포인트의 모든 operation
   matchVariables?: Record<string, unknown> // 부분집합(deep subset) 매칭, optional
   action:
-    | { type: 'mock'; data: unknown; errors?: unknown[] } // body 전체 교체
+    | {
+        type: 'mock' // body 전체 교체
+        data: unknown
+        errors?: unknown[]
+        body?: unknown // 주면 {data, errors} 봉투를 무시하고 그대로 나간다
+        status?: number // 기본 200
+        headers?: Record<string, string>
+        delayMs?: number // 느린 API 재현
+      }
     | { type: 'modify'; mergePatch: unknown } // 응답에 deep merge
+    | { type: 'path'; patches: { path: string; value: unknown }[] } // 배열 변환
 }
 ```
+
+`endpoint`는 `matcher`가 해석한다. `includes`는 부분 문자열(기본값, 저장된 룰 호환),
+`glob`은 fnmatch로 URL 전체 매칭, `regex`는 부분 매칭, `exact`는 완전 일치.
+pproxy와 이름이 같아서 `rules.json`을 주고받을 때 그대로 매핑된다.
 
 ### mock vs modify
 
@@ -173,12 +187,14 @@ MAIN의 interceptor는 `document_start`에 즉시 켜지지만, 룰은 ISOLATED�
 
 요청당 다음 순서로 평가:
 
-1. URL glob 매칭 (v0는 substring)
-2. POST 메서드 확인
-3. body JSON 파싱 (실패 시 passthrough)
-4. `operationName` 일치
-5. (있으면) `matchVariables` deep-subset 매칭
-6. **enabled 룰 중 첫 매치 승리**
+1. POST 메서드 확인
+2. body JSON 파싱 (실패 시 passthrough)
+3. GraphQL 요청 판별 — `query`도 `operationName`도 없으면 passthrough (REST POST 보호)
+4. `operationName` 확정 — 안 왔으면 query 본문에서 복구
+5. `matcher`로 URL 매칭
+6. `operationName` 일치 (룰 쪽이 비어 있으면 전부 통과)
+7. (있으면) `matchVariables` deep-subset 매칭
+8. **enabled 룰 중 첫 매치 승리**
 
 > 룰 순서가 의미를 가지므로, 패널에서 순서 조정 기능은 추후 고려.
 
@@ -254,6 +270,10 @@ Apollo Client는 응답 shape에 민감하므로 mock도 다음을 지켜야 캐
 
 - [x] path-DSL (`appointments[].status` 형태 배열 변환)
 - [x] 룰 순서 조정 UI
+- [x] operationName 복구 — 클라이언트가 안 보내면 query 본문에서 뽑는다
+- [x] 매처 선택 (`includes` / `glob` / `regex` / `exact`)
+- [x] 엔드포인트 전체 룰 (`operationName` 비우기)
+- [x] mock 응답 제어 — status / headers / delayMs / 봉투 해제
 - [x] (선택) 자동 요청 캡처 — `chrome.devtools.network.onRequestFinished` 기반, operationName/variables로 reconcile (+ 실제 응답으로 mock 시드)
 
 ### 학습 가치가 큰 지점

@@ -6,7 +6,7 @@ import { matchRule } from '../shared/match.ts'
 import { RULES_EVENT, type RulesEventDetail } from '../shared/messaging.ts'
 import { mergePatch } from '../shared/object.ts'
 import { applyPathPatches } from '../shared/path.ts'
-import type { Rule } from '../shared/rule.types.ts'
+import type { MockAction, Rule } from '../shared/rule.types.ts'
 
 // Trap 1: capture native fetch BEFORE interceptor.apply() so the `modify`
 // path can reach the real server without re-intercepting itself.
@@ -26,11 +26,28 @@ window.addEventListener(RULES_EVENT, (event) => {
   markReady()
 })
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'content-type': 'application/json' },
   })
+}
+
+function mockResponse(action: MockAction): Response {
+  const headers = new Headers({ 'content-type': 'application/json' })
+
+  for (const [name, value] of Object.entries(action.headers ?? {})) {
+    headers.set(name, value)
+  }
+
+  const body =
+    action.body === undefined ? { data: action.data, errors: action.errors } : action.body
+
+  return new Response(JSON.stringify(body), { status: action.status ?? 200, headers })
 }
 
 const interceptor = new BatchInterceptor({
@@ -60,7 +77,11 @@ interceptor.on('request', async ({ request, controller }) => {
   }
 
   if (rule.action.type === 'mock') {
-    controller.respondWith(jsonResponse({ data: rule.action.data, errors: rule.action.errors }))
+    if (rule.action.delayMs) {
+      await sleep(rule.action.delayMs)
+    }
+
+    controller.respondWith(mockResponse(rule.action))
 
     return
   }

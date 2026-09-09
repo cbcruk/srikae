@@ -32,9 +32,10 @@ export function RuleList({
             aria-label="Enable rule"
           />
           <button type="button" className="rule-summary" onClick={() => onSelect(rule.id)}>
-            <span className="rule-op">{rule.operationName || '(unnamed)'}</span>
+            <span className="rule-op">{rule.operationName || '(any operation)'}</span>
             <span className={`rule-badge badge-${rule.action.type}`}>{rule.action.type}</span>
             <span className="rule-endpoint">{rule.endpoint}</span>
+            <span className="rule-matcher">{rule.matcher ?? 'includes'}</span>
           </button>
           <div className="rule-move">
             <button

@@ -1,24 +1,58 @@
+import { isMatcherName } from './matching.ts'
 import { isPlainObject } from './object.ts'
 import type { Rule } from './rule.types.ts'
+
+// `new Response` rejects anything outside this range, and it would throw inside
+// the interceptor, so an imported rule is checked here instead.
+export const MIN_STATUS = 200
+export const MAX_STATUS = 599
 
 export function createEmptyRule(): Rule {
   return {
     id: crypto.randomUUID(),
     enabled: true,
     endpoint: '/graphql',
+    matcher: 'includes',
     operationName: '',
     action: { type: 'mock', data: {} },
   }
 }
 
-function isRule(value: unknown): value is Rule {
+function isStatus(value: unknown): boolean {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= MIN_STATUS &&
+    value <= MAX_STATUS
+  )
+}
+
+function isHeaders(value: unknown): boolean {
+  return isPlainObject(value) && Object.values(value).every((header) => typeof header === 'string')
+}
+
+function isAction(value: unknown): boolean {
   if (!isPlainObject(value)) {
     return false
   }
 
-  const action = value.action
+  if (value.type === 'modify' || value.type === 'path') {
+    return true
+  }
 
-  if (!isPlainObject(action)) {
+  if (value.type !== 'mock') {
+    return false
+  }
+
+  return (
+    (value.status === undefined || isStatus(value.status)) &&
+    (value.headers === undefined || isHeaders(value.headers)) &&
+    (value.delayMs === undefined || (typeof value.delayMs === 'number' && value.delayMs >= 0))
+  )
+}
+
+function isRule(value: unknown): value is Rule {
+  if (!isPlainObject(value)) {
     return false
   }
 
@@ -27,7 +61,8 @@ function isRule(value: unknown): value is Rule {
     typeof value.enabled === 'boolean' &&
     typeof value.endpoint === 'string' &&
     typeof value.operationName === 'string' &&
-    (action.type === 'mock' || action.type === 'modify' || action.type === 'path')
+    (value.matcher === undefined || isMatcherName(value.matcher)) &&
+    isAction(value.action)
   )
 }
 
