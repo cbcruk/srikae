@@ -119,6 +119,11 @@ body {
   opacity: 0.8;
 }
 
+.rule-matcher {
+  opacity: 0.5;
+  font-size: 11px;
+}
+
 .rule-endpoint {
   opacity: 0.6;
   font-size: 11px;
@@ -147,9 +152,21 @@ body {
 
 .rule-editor input[type='text'],
 .rule-editor input:not([type]),
+.rule-editor select,
 .rule-editor textarea {
   font: inherit;
   padding: 4px 6px;
+}
+
+.field-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.field-row > label {
+  flex: 1;
+  min-width: 0;
 }
 
 .rule-editor textarea {

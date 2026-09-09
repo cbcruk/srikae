@@ -33,8 +33,24 @@ test('passthrough for batch arrays (non-object body)', () => {
   expect(matchRule([rule({})], URL, [{ operationName: 'GetUser' }])).toBeUndefined()
 })
 
-test('passthrough when operationName is absent (e.g. persisted query)', () => {
-  expect(matchRule([rule({})], URL, { query: '{ me }' })).toBeUndefined()
+test('recovers operationName from the query text when the field is missing', () => {
+  const rules = [rule({})]
+  expect(matchRule(rules, URL, { query: 'query GetUser { me { id } }' })).toBe(rules[0])
+})
+
+test('passthrough for an anonymous document against a named rule', () => {
+  expect(matchRule([rule({})], URL, { query: '{ me { id } }' })).toBeUndefined()
+})
+
+test('an empty operationName takes every operation on the endpoint', () => {
+  const rules = [rule({ operationName: '' })]
+  expect(matchRule(rules, URL, { operationName: 'GetUser' })).toBe(rules[0])
+  expect(matchRule(rules, URL, { operationName: 'SignIn' })).toBe(rules[0])
+  expect(matchRule(rules, URL, { query: '{ me }' })).toBe(rules[0])
+})
+
+test('an endpoint-wide rule still ignores non-GraphQL bodies', () => {
+  expect(matchRule([rule({ operationName: '' })], URL, { id: 1, note: 'rest' })).toBeUndefined()
 })
 
 test('matchVariables narrows by deep subset', () => {
@@ -51,4 +67,15 @@ test('first enabled match wins (rule order matters)', () => {
   const first = rule({ id: 'a', action: { type: 'mock', data: { tag: 'a' } } })
   const second = rule({ id: 'b', action: { type: 'mock', data: { tag: 'b' } } })
   expect(matchRule([first, second], URL, { operationName: 'GetUser' })).toBe(first)
+})
+
+test('the matcher decides how the endpoint is compared', () => {
+  const body = { operationName: 'GetUser' }
+  const decoy = 'https://api.example.com/graphql/internal/rest'
+
+  expect(matchRule([rule({ matcher: 'includes' })], decoy, body)).toBeDefined()
+  expect(matchRule([rule({ endpoint: '*/graphql', matcher: 'glob' })], decoy, body)).toBeUndefined()
+  expect(matchRule([rule({ endpoint: '*/graphql', matcher: 'glob' })], URL, body)).toBeDefined()
+  expect(matchRule([rule({ endpoint: URL, matcher: 'exact' })], URL, body)).toBeDefined()
+  expect(matchRule([rule({ endpoint: 'graphql$', matcher: 'regex' })], URL, body)).toBeDefined()
 })

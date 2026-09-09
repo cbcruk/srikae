@@ -1,5 +1,6 @@
+import { parseGraphQLRequest } from '../../../shared/graphql.ts'
 import { isPlainObject } from '../../../shared/object.ts'
-import type { GraphQLRequestBody, Rule } from '../../../shared/rule.types.ts'
+import type { Rule } from '../../../shared/rule.types.ts'
 import type { CapturedOperation, CapturedRequest } from './capture.types.ts'
 
 export function parseGraphQLBody(text: string | undefined): CapturedOperation | null {
@@ -15,18 +16,11 @@ export function parseGraphQLBody(text: string | undefined): CapturedOperation | 
     return null
   }
 
-  // Batch arrays and non-object bodies are out of scope (passthrough).
-  if (!isPlainObject(parsed)) {
-    return null
-  }
+  const request = parseGraphQLRequest(parsed)
 
-  const { operationName, variables } = parsed as GraphQLRequestBody
-
-  if (typeof operationName !== 'string' || operationName === '') {
-    return null
-  }
-
-  return { operationName, variables }
+  // Batch arrays and non-GraphQL bodies are out of scope, and a capture only
+  // seeds a rule once it has a name to show.
+  return request?.operationName ? request : null
 }
 
 export function deriveEndpoint(url: string): string {
@@ -54,6 +48,7 @@ export function ruleFromCapture(capture: CapturedRequest, data: unknown = {}): R
     id: crypto.randomUUID(),
     enabled: true,
     endpoint: deriveEndpoint(capture.url),
+    matcher: 'includes',
     operationName: capture.operationName,
     matchVariables: capture.variables,
     action: { type: 'mock', data },

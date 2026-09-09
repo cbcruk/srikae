@@ -1,14 +1,12 @@
-import { isPlainObject, isSubset } from './object.ts'
-import type { GraphQLRequestBody, Rule } from './rule.types.ts'
+import { parseGraphQLRequest } from './graphql.ts'
+import { matchUrl } from './matching.ts'
+import { isSubset } from './object.ts'
+import type { Rule } from './rule.types.ts'
 
 export function matchRule(rules: Rule[], url: string, body: unknown): Rule | undefined {
-  if (!isPlainObject(body)) {
-    return undefined
-  }
+  const request = parseGraphQLRequest(body)
 
-  const { operationName, variables } = body as GraphQLRequestBody
-
-  if (!operationName) {
+  if (!request) {
     return undefined
   }
 
@@ -17,15 +15,16 @@ export function matchRule(rules: Rule[], url: string, body: unknown): Rule | und
       return false
     }
 
-    if (!url.includes(rule.endpoint)) {
+    if (!matchUrl(url, rule.endpoint, rule.matcher)) {
       return false
     }
 
-    if (rule.operationName !== operationName) {
+    // An empty operationName is the wildcard: it takes the whole endpoint.
+    if (rule.operationName && rule.operationName !== request.operationName) {
       return false
     }
 
-    if (rule.matchVariables && !isSubset(variables, rule.matchVariables)) {
+    if (rule.matchVariables && !isSubset(request.variables, rule.matchVariables)) {
       return false
     }
 
