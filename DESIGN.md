@@ -35,17 +35,35 @@ tweak 문서를 보면 실제로 하는 일은 두 가지뿐이다:
 - passthrough가 디폴트 (매칭 안 되면 실제 응답 그대로)
 - DevTools 패널에서 룰 CRUD + import/export
 - **no-eval**: 자유 JS 스니펫 없이 데이터/패치 선언만으로 동작
+- **Persisted Query (APQ)**: 해시를 이름으로 되돌려 매칭 (아래 참조)
 
 ### 명시적으로 스코프 밖 (passthrough 처리)
 
 - **Batch 쿼리** (body가 배열 — Apollo `BatchHttpLink`)
 - **Subscription** (WebSocket / SSE, graphql-ws)
 - **`@defer` / `@stream`** (`multipart/mixed` 점진 응답)
-- **Persisted Query (APQ)** (query 본문 없이 해시만 옴)
 - **multipart 파일 업로드** mutation
 - 자동 요청 캡처 UX (캡처 채널과 변조 채널의 reconcile 문제 때문에 v0에서 제외)
 
 > v0 매칭에서 `body`가 객체가 아니거나 `operationName`이 없으면 그냥 passthrough. 패널에는 "지원 안 함" 정도만 표기.
+
+### Persisted Query (APQ)
+
+APQ는 document 대신 해시를 보내므로, `operationName`까지 생략하는 클라이언트의
+요청에는 매칭할 거리가 남지 않는다. 다만 이름을 배울 기회는 있다. 해시는 document와
+함께 보내야 등록되고, 이는 operation을 처음 쓸 때와 서버가 해시를 잊었을 때마다
+일어난다. 그 쌍을 지켜보면 해시에 이름이 붙고, 이후 해시만 오는 요청은 거기서
+식별된다.
+
+캐시는 MAIN world에 페이지 단위로 하나 있고 상한이 있다. 오래된 것부터 버리며,
+버려진 해시는 다음에 document가 다시 오면 재학습된다.
+
+배우지 못하는 경우도 있다. 페이지가 열린 시점에 서버가 이미 해시를 알고 있으면
+document는 아예 전송되지 않고, 그 요청은 이름 없이 남아 passthrough된다. 이름이
+없어도 endpoint 전체 룰(`operationName` 빈 값)에는 걸린다.
+
+> Relay의 persisted query(`doc_id`만 보내는 방식)는 APQ와 다른 프로토콜이고,
+> document가 클라이언트에 아예 없어서 학습할 기회 자체가 없다. 스코프 밖.
 
 ---
 

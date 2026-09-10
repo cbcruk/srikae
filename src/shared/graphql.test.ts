@@ -1,6 +1,7 @@
 import { expect, test } from 'vite-plus/test'
 
-import { extractOperationName, parseGraphQLRequest } from './graphql.ts'
+import { extractOperationName, identifyOperation, parseGraphQLRequest } from './graphql.ts'
+import { createPersistedQueryCache } from './persisted.ts'
 
 test('extractOperationName reads the name of each operation type', () => {
   expect(extractOperationName('query GetUser { me { id } }')).toBe('GetUser')
@@ -54,4 +55,53 @@ test('parseGraphQLRequest drops variables that are not an object', () => {
   expect(parseGraphQLRequest({ query: '{ me }', variables: { id: '1' } })?.variables).toEqual({
     id: '1',
   })
+})
+
+const apq = (hash: string, rest: Record<string, unknown> = {}): Record<string, unknown> => ({
+  ...rest,
+  extensions: { persistedQuery: { version: 1, sha256Hash: hash } },
+})
+
+test('parseGraphQLRequest treats a persisted query hash as a GraphQL request', () => {
+  expect(parseGraphQLRequest(apq('abc', { variables: { id: '1' } }))).toEqual({
+    operationName: '',
+    variables: { id: '1' },
+    persistedQueryHash: 'abc',
+  })
+})
+
+test('parseGraphQLRequest ignores a persistedQuery block with no hash', () => {
+  expect(parseGraphQLRequest({ extensions: { persistedQuery: { version: 1 } } })).toBeNull()
+  expect(parseGraphQLRequest({ extensions: { persistedQuery: { sha256Hash: '' } } })).toBeNull()
+  expect(parseGraphQLRequest({ extensions: { tracing: true } })).toBeNull()
+})
+
+test('identifyOperation learns a hash from the request that registers it', () => {
+  const cache = createPersistedQueryCache()
+  const registering = parseGraphQLRequest(apq('abc', { query: 'query GetUser { me }' }))!
+
+  expect(identifyOperation(registering, cache)).toBe('GetUser')
+  expect(identifyOperation(parseGraphQLRequest(apq('abc'))!, cache)).toBe('GetUser')
+})
+
+test('identifyOperation names a later hash-only request from what it learned', () => {
+  const cache = createPersistedQueryCache()
+
+  cache.remember('abc', 'GetUser')
+
+  expect(identifyOperation(parseGraphQLRequest(apq('abc'))!, cache)).toBe('GetUser')
+})
+
+test('identifyOperation leaves a hash it has never seen unnamed', () => {
+  const cache = createPersistedQueryCache()
+
+  expect(identifyOperation(parseGraphQLRequest(apq('unknown'))!, cache)).toBe('')
+})
+
+test('identifyOperation leaves a request without a hash alone', () => {
+  const cache = createPersistedQueryCache()
+  const plain = parseGraphQLRequest({ query: 'query GetUser { me }' })!
+
+  expect(identifyOperation(plain, cache)).toBe('GetUser')
+  expect(cache.resolve('abc')).toBe('')
 })

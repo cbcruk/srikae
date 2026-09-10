@@ -45,4 +45,4 @@ What does not survive the trip:
 - `src/main-world/injected.ts` — MAIN world: `@mswjs/interceptors` traps fetch/XHR, matches rules, mocks or merge-patches responses.
 - `src/content/bridge.ts` — ISOLATED world: bridges `chrome.storage` to the MAIN world via `CustomEvent`.
 - `src/devtools/` — React rule editor (CRUD + JSON import/export).
-- `src/shared/` — rule matching, RFC 7386 merge-patch, storage, types, and the pproxy format adapter.
+- `src/shared/` — rule matching, RFC 7386 merge-patch, persisted-query names, storage, types, and the pproxy format adapter.
