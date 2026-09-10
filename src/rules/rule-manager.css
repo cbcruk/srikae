@@ -197,6 +197,12 @@ body {
   white-space: pre-wrap;
 }
 
+.notice {
+  color: #a60;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 .path-patches {
   display: flex;
   flex-direction: column;
