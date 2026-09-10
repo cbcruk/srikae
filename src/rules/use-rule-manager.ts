@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 
 import type { Rule } from '../shared/rule.types.ts'
 import { createEmptyRule, moveRule } from '../shared/rule.utils.ts'
-import { exportRules, readRulesFile } from './rule-manager.utils.ts'
+import { exportPproxyRules, exportRules, readRulesFile } from './rule-manager.utils.ts'
 import { useRules } from './use-rules.ts'
 
 export interface UseRuleManagerResult {
@@ -11,6 +11,9 @@ export interface UseRuleManagerResult {
   draft: Rule | null
   setDraft: React.Dispatch<React.SetStateAction<Rule | null>>
   importError: string | null
+  // Rules a pproxy file carried that this panel cannot represent. Reported
+  // rather than dropped silently.
+  importNotice: string | null
   fileInputRef: React.RefObject<HTMLInputElement | null>
   add: () => void
   select: (id: string) => void
@@ -19,6 +22,7 @@ export interface UseRuleManagerResult {
   remove: (id: string) => void
   move: (id: string, delta: number) => void
   exportCurrent: () => void
+  exportForPproxy: () => void
   importFromFile: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
 }
 
@@ -26,6 +30,7 @@ export function useRuleManager(): UseRuleManagerResult {
   const { rules, loading, saveRules } = useRules()
   const [draft, setDraft] = useState<Rule | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  const [importNotice, setImportNotice] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function add(): void {
@@ -69,6 +74,10 @@ export function useRuleManager(): UseRuleManagerResult {
     exportRules(rules)
   }
 
+  function exportForPproxy(): void {
+    exportPproxyRules(rules)
+  }
+
   async function importFromFile(event: React.ChangeEvent<HTMLInputElement>): Promise<void> {
     const file = event.target.files?.[0]
 
@@ -79,10 +88,20 @@ export function useRuleManager(): UseRuleManagerResult {
     }
 
     try {
-      await saveRules(await readRulesFile(file))
+      const { rules: imported, skipped } = await readRulesFile(file)
+
+      await saveRules(imported)
       setImportError(null)
+      setImportNotice(
+        skipped.length === 0
+          ? null
+          : `Skipped ${skipped.length} rule(s): ${skipped
+              .map(({ pattern, reason }) => `${pattern} (${reason})`)
+              .join(', ')}`,
+      )
     } catch (error) {
       setImportError((error as Error).message)
+      setImportNotice(null)
     }
   }
 
@@ -92,6 +111,7 @@ export function useRuleManager(): UseRuleManagerResult {
     draft,
     setDraft,
     importError,
+    importNotice,
     fileInputRef,
     add,
     select,
@@ -100,6 +120,7 @@ export function useRuleManager(): UseRuleManagerResult {
     remove,
     move,
     exportCurrent,
+    exportForPproxy,
     importFromFile,
   }
 }

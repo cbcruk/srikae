@@ -21,6 +21,7 @@ export function RuleManager({
     draft,
     setDraft,
     importError,
+    importNotice,
     fileInputRef,
     add,
     select,
@@ -29,6 +30,7 @@ export function RuleManager({
     remove,
     move,
     exportCurrent,
+    exportForPproxy,
     importFromFile,
   } = manager
 
@@ -44,6 +46,14 @@ export function RuleManager({
         </button>
         <button type="button" onClick={exportCurrent} disabled={rules.length === 0}>
           Export
+        </button>
+        <button
+          type="button"
+          onClick={exportForPproxy}
+          disabled={rules.every((rule) => !rule.enabled)}
+          title="Write a pproxy rules.json. Disabled rules are left out."
+        >
+          Export for pproxy
         </button>
         <button type="button" onClick={() => fileInputRef.current?.click()}>
           Import
@@ -61,6 +71,7 @@ export function RuleManager({
       </header>
 
       {importError ? <p className="error">{importError}</p> : null}
+      {importNotice ? <p className="notice">{importNotice}</p> : null}
 
       <div className={layout === 'stacked' ? 'layout stacked' : 'layout'}>
         <div className="left-column">
