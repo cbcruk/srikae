@@ -6,6 +6,7 @@ import { matchRule } from '../shared/match.ts'
 import { RULES_EVENT, type RulesEventDetail } from '../shared/messaging.ts'
 import { mergePatch } from '../shared/object.ts'
 import { applyPathPatches } from '../shared/path.ts'
+import { createPersistedQueryCache } from '../shared/persisted.ts'
 import type { MockAction, Rule } from '../shared/rule.types.ts'
 
 // Trap 1: capture native fetch BEFORE interceptor.apply() so the `modify`
@@ -25,6 +26,11 @@ window.addEventListener(RULES_EVENT, (event) => {
   rules = (event as CustomEvent<RulesEventDetail>).detail.rules
   markReady()
 })
+
+// One cache for the life of the page. A persisted query registers its hash by
+// sending the document with it, and every hash-only request afterwards is named
+// from what that taught us.
+const persistedQueries = createPersistedQueryCache()
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -70,7 +76,7 @@ interceptor.on('request', async ({ request, controller }) => {
     return
   }
 
-  const rule = matchRule(rules, request.url, body)
+  const rule = matchRule(rules, request.url, body, persistedQueries)
 
   if (!rule) {
     return
